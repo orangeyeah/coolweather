@@ -66,6 +66,8 @@ public class WeatherActivity extends AppCompatActivity {
     private TextView sportText;
 
     private ImageView bingPicImg;
+    private String weatherId;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -93,7 +95,6 @@ public class WeatherActivity extends AppCompatActivity {
         swipeRefresh.setColorSchemeResources(R.color.colorPrimary);
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         String weatherString = prefs.getString("weather",null);
-        final String weatherId;
         if (weatherString != null){
             //有缓存时直接解析天气数据
             Weather weather = Utility.handleWeatherResponse(weatherString);
@@ -127,11 +128,17 @@ public class WeatherActivity extends AppCompatActivity {
 
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Log.i(TAG, "onResume: -------------");
+    }
+
     /**
      * 根据天气id请求城市天气信息
      */
-    public void requestWeather(final String weatherId){
-        String weatherUrl = "http://guolin.tech/api/weather?cityid=" + weatherId +
+    public void requestWeather(final String id){
+        String weatherUrl = "http://guolin.tech/api/weather?cityid=" + id +
                 "&key=b602fd1bf9834f3783d97ab64dda50cc";
         HttpUtil.sendOkHttpRequest(weatherUrl, new Callback() {
             @Override
@@ -158,6 +165,7 @@ public class WeatherActivity extends AppCompatActivity {
                                     getDefaultSharedPreferences(WeatherActivity.this).edit();
                             editor.putString("weather",responseText);
                             editor.apply();
+                            weatherId = weather.basic.weatherId;
                             showWeatherInfo(weather);
                             Intent intent = new Intent(WeatherActivity.this, AutoUpdateService.class);
                             startService(intent);
@@ -180,6 +188,7 @@ public class WeatherActivity extends AppCompatActivity {
         String updateTime = weather.basic.update.updateTime.split(" ")[1];
         String degree = weather.now.temperature + "℃";
         String weatherInfo = weather.now.more.info;
+        Log.i(TAG, "showWeatherInfo: ------------"+updateTime);
         titleCity.setText(cityName);
         titleUpdateTime.setText(updateTime);
         degreeText.setText(degree);
